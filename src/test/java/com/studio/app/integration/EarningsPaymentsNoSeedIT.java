@@ -35,22 +35,26 @@ class EarningsPaymentsNoSeedIT extends BaseIntegrationNoSeedTest {
         mockMvc.perform(post("/api/students/{id}/schedules", studentId.longValue())
                         .contentType(JSON)
                         .content("""
-                                {
-                                  "dayOfWeek": "MONDAY",
-                                  "startTime": "10:00",
-                                  "durationMinutes": 60
-                                }
+                                [
+                                  {
+                                    "dayOfWeek": "MONDAY",
+                                    "startTime": "10:00",
+                                    "durationMinutes": 60
+                                  }
+                                ]
                                 """))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/students/{id}/schedules", studentId.longValue())
                         .contentType(JSON)
                         .content("""
-                                {
-                                  "dayOfWeek": "WEDNESDAY",
-                                  "startTime": "10:00",
-                                  "durationMinutes": 60
-                                }
+                                [
+                                  {
+                                    "dayOfWeek": "WEDNESDAY",
+                                    "startTime": "10:00",
+                                    "durationMinutes": 60
+                                  }
+                                ]
                                 """))
                 .andExpect(status().isCreated());
 

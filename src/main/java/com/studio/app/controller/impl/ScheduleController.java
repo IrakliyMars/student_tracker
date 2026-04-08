@@ -20,7 +20,7 @@ public class ScheduleController implements ScheduleApi {
 
     /** {@inheritDoc} */
     @Override
-    public ResponseEntity<WeeklyScheduleResponse> addSchedule(Long studentId, WeeklyScheduleRequest request) {
+    public ResponseEntity<List<WeeklyScheduleResponse>> addSchedule(Long studentId, List<WeeklyScheduleRequest> request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(scheduleService.addSchedule(studentId, request));
     }
@@ -33,7 +33,7 @@ public class ScheduleController implements ScheduleApi {
 
     /** {@inheritDoc} */
     @Override
-    public ResponseEntity<WeeklyScheduleResponse> updateSchedule(Long studentId, Long scheduleId, WeeklyScheduleRequest request) {
+    public ResponseEntity<List<WeeklyScheduleResponse>> updateSchedule(Long studentId, Long scheduleId, List<WeeklyScheduleRequest> request) {
         return ResponseEntity.ok(scheduleService.updateSchedule(studentId, scheduleId, request));
     }
 
