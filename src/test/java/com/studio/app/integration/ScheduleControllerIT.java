@@ -19,17 +19,20 @@ class ScheduleControllerIT extends BaseIntegrationTest {
             mockMvc.perform(post("/api/students/1/schedules")
                             .contentType(JSON)
                             .content("""
-                                    {
-                                      "dayOfWeek": "FRIDAY",
-                                      "startTime": "16:00",
-                                      "durationMinutes": 45
-                                    }
+                                    [
+                                      {
+                                        "dayOfWeek": "FRIDAY",
+                                        "startTime": "16:00",
+                                        "durationMinutes": 45
+                                      }
+                                    ]
                                     """))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.studentId").value(1))
-                    .andExpect(jsonPath("$.dayOfWeek").value("FRIDAY"))
-                    .andExpect(jsonPath("$.startTime").value("16:00:00"))
-                    .andExpect(jsonPath("$.durationMinutes").value(45));
+                    .andExpect(jsonPath("$", hasSize(1)))
+                    .andExpect(jsonPath("$[0].studentId").value(1))
+                    .andExpect(jsonPath("$[0].dayOfWeek").value("FRIDAY"))
+                    .andExpect(jsonPath("$[0].startTime").value("16:00:00"))
+                    .andExpect(jsonPath("$[0].durationMinutes").value(45));
         }
 
         @Test
@@ -38,11 +41,13 @@ class ScheduleControllerIT extends BaseIntegrationTest {
             mockMvc.perform(post("/api/students/1/schedules")
                             .contentType(JSON)
                             .content("""
-                                    {
-                                      "dayOfWeek": "MONDAY",
-                                      "startTime": "16:00",
-                                      "durationMinutes": 45
-                                    }
+                                    [
+                                      {
+                                        "dayOfWeek": "MONDAY",
+                                        "startTime": "16:00",
+                                        "durationMinutes": 45
+                                      }
+                                    ]
                                     """))
                     .andExpect(status().isConflict());
         }
@@ -52,10 +57,12 @@ class ScheduleControllerIT extends BaseIntegrationTest {
             mockMvc.perform(post("/api/students/1/schedules")
                             .contentType(JSON)
                             .content("""
-                                    {
-                                      "startTime": "16:00",
-                                      "durationMinutes": 45
-                                    }
+                                    [
+                                      {
+                                        "startTime": "16:00",
+                                        "durationMinutes": 45
+                                      }
+                                    ]
                                     """))
                     .andExpect(status().isBadRequest());
         }
@@ -72,11 +79,13 @@ class ScheduleControllerIT extends BaseIntegrationTest {
             mockMvc.perform(post("/api/students/1/schedules")
                             .contentType(JSON)
                             .content("""
-                                    {
-                                      "dayOfWeek": "FRIDAY",
-                                      "startTime": "16:00",
-                                      "durationMinutes": 45
-                                    }
+                                    [
+                                      {
+                                        "dayOfWeek": "FRIDAY",
+                                        "startTime": "16:00",
+                                        "durationMinutes": 45
+                                      }
+                                    ]
                                     """))
                     .andExpect(status().isBadRequest());
         }
@@ -109,16 +118,19 @@ class ScheduleControllerIT extends BaseIntegrationTest {
             mockMvc.perform(post("/api/students/1/schedules/1")
                             .contentType(JSON)
                             .content("""
-                                    {
-                                      "dayOfWeek": "THURSDAY",
-                                      "startTime": "11:00",
-                                      "durationMinutes": 90
-                                    }
+                                    [
+                                      {
+                                        "dayOfWeek": "THURSDAY",
+                                        "startTime": "11:00",
+                                        "durationMinutes": 90
+                                      }
+                                    ]
                                     """))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.dayOfWeek").value("THURSDAY"))
-                    .andExpect(jsonPath("$.startTime").value("11:00:00"))
-                    .andExpect(jsonPath("$.durationMinutes").value(90));
+                    .andExpect(jsonPath("$", hasSize(1)))
+                    .andExpect(jsonPath("$[0].dayOfWeek").value("THURSDAY"))
+                    .andExpect(jsonPath("$[0].startTime").value("11:00:00"))
+                    .andExpect(jsonPath("$[0].durationMinutes").value(90));
         }
 
         @Test
@@ -126,11 +138,13 @@ class ScheduleControllerIT extends BaseIntegrationTest {
             mockMvc.perform(post("/api/students/1/schedules/999")
                             .contentType(JSON)
                             .content("""
-                                    {
-                                      "dayOfWeek": "FRIDAY",
-                                      "startTime": "11:00",
-                                      "durationMinutes": 60
-                                    }
+                                    [
+                                      {
+                                        "dayOfWeek": "FRIDAY",
+                                        "startTime": "11:00",
+                                        "durationMinutes": 60
+                                      }
+                                    ]
                                     """))
                     .andExpect(status().isNotFound());
         }

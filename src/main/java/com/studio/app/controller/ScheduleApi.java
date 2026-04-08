@@ -6,6 +6,7 @@ import com.studio.app.dto.response.WeeklyScheduleResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,16 +21,16 @@ import java.util.List;
 public interface ScheduleApi {
 
     /**
-     * Creates a new recurring weekly class slot for the student.
+     * Creates one or more recurring weekly class slots for the student.
      *
      * @param studentId the ID of the student
-     * @param request   the schedule details (day, time, duration)
-     * @return the created {@link WeeklyScheduleResponse}
+     * @param request   schedule details (day, time, duration) for each slot
+     * @return created {@link WeeklyScheduleResponse} entries
      */
-    @Operation(summary = "Add a weekly schedule", description = "Creates a new recurring weekly class slot for the student.")
+    @Operation(summary = "Add weekly schedules", description = "Creates one or more recurring weekly class slots for the student.")
     @PostMapping("/{studentId}/schedules")
-    ResponseEntity<WeeklyScheduleResponse> addSchedule(@PathVariable Long studentId,
-                                                       @Valid @RequestBody WeeklyScheduleRequest request);
+    ResponseEntity<List<WeeklyScheduleResponse>> addSchedule(@PathVariable Long studentId,
+                                                             @NotEmpty @RequestBody List<@Valid WeeklyScheduleRequest> request);
 
     /**
      * Returns all active weekly schedule slots for the student.
@@ -42,18 +43,18 @@ public interface ScheduleApi {
     ResponseEntity<List<WeeklyScheduleResponse>> getSchedules(@PathVariable Long studentId);
 
     /**
-     * Updates an existing weekly schedule slot (day, time, duration).
+     * Updates an existing weekly schedule slot and optionally creates additional ones.
      *
      * @param studentId  the ID of the student
      * @param scheduleId the ID of the schedule to update
-     * @param request    the updated schedule details
-     * @return the updated {@link WeeklyScheduleResponse}
+     * @param request    updated schedule details where the first item updates scheduleId
+     * @return updated/created {@link WeeklyScheduleResponse} entries
      */
-    @Operation(summary = "Update a schedule", description = "Updates an existing weekly schedule slot (day, time, duration).")
+    @Operation(summary = "Update schedules", description = "Updates an existing weekly schedule slot and optionally creates additional ones.")
     @PostMapping("/{studentId}/schedules/{scheduleId}")
-    ResponseEntity<WeeklyScheduleResponse> updateSchedule(@PathVariable Long studentId,
-                                                          @PathVariable Long scheduleId,
-                                                          @Valid @RequestBody WeeklyScheduleRequest request);
+    ResponseEntity<List<WeeklyScheduleResponse>> updateSchedule(@PathVariable Long studentId,
+                                                                @PathVariable Long scheduleId,
+                                                                @NotEmpty @RequestBody List<@Valid WeeklyScheduleRequest> request);
 
     /**
      * Soft-deletes a recurring schedule slot.
