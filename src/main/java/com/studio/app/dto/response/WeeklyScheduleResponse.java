@@ -29,4 +29,7 @@ public class WeeklyScheduleResponse {
 
     /** Duration of each occurrence in minutes. */
     private Integer durationMinutes;
+
+    /** End time of each occurrence in the student's timezone. */
+    private LocalTime endTime;
 }

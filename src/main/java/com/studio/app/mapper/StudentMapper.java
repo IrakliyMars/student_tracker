@@ -32,6 +32,7 @@ public interface StudentMapper {
 
     /** Maps a {@link WeeklySchedule} to a {@link WeeklyScheduleResponse}. */
     @Mapping(target = "studentId", source = "student.id")
+    @Mapping(target = "endTime", expression = "java(schedule.getStartTime() == null || schedule.getDurationMinutes() == null ? null : schedule.getStartTime().plusMinutes(schedule.getDurationMinutes()))")
     WeeklyScheduleResponse toWeeklyScheduleResponse(WeeklySchedule schedule);
 
     /** Maps a {@link Payer} to a {@link PayerResponse}. */

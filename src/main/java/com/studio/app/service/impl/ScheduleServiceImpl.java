@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -61,15 +62,50 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     private WeeklySchedule buildSchedule(com.studio.app.entity.Student student, WeeklyScheduleRequest request) {
+        int resolvedDuration = resolveDurationMinutes(request);
+
         return WeeklySchedule.builder()
                 .student(student)
                 .dayOfWeek(request.getDayOfWeek())
                 .startTime(request.getStartTime())
-                .durationMinutes(request.getDurationMinutes())
+                .durationMinutes(resolvedDuration)
                 .effectiveFromEpochDay(student.getStartDate() == null
                         ? LocalDate.now().toEpochDay()
                         : student.getStartDate().toEpochDay())
                 .build();
+    }
+
+    private int resolveDurationMinutes(WeeklyScheduleRequest request) {
+        var duration = request.getDurationMinutes();
+        var endTime = request.getEndTime();
+
+        if (duration == null && endTime == null) {
+            throw new BadRequestException("Either durationMinutes or endTime is required");
+        }
+
+        if (duration != null && endTime == null) {
+            return duration;
+        }
+
+        if (duration == null) {
+            if (!endTime.isAfter(request.getStartTime())) {
+                throw new BadRequestException("endTime must be after startTime");
+            }
+
+            long derivedDuration = ChronoUnit.MINUTES.between(request.getStartTime(), endTime);
+            if (derivedDuration < 15 || derivedDuration > 480) {
+                throw new BadRequestException("Derived duration must be between 15 and 480 minutes");
+            }
+
+            return (int) derivedDuration;
+        }
+
+        var expectedEndTime = request.getStartTime().plusMinutes(duration);
+        if (!expectedEndTime.equals(endTime)) {
+            throw new BadRequestException("durationMinutes and endTime must match startTime");
+        }
+
+        return duration;
     }
 
     private void validateDayAvailability(Set<DayOfWeek> occupiedDays, DayOfWeek dayOfWeek) {
@@ -117,7 +153,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         validateDayAvailability(occupiedDays, primary.getDayOfWeek());
         schedule.setDayOfWeek(primary.getDayOfWeek());
         schedule.setStartTime(primary.getStartTime());
-        schedule.setDurationMinutes(primary.getDurationMinutes());
+        schedule.setDurationMinutes(resolveDurationMinutes(primary));
         occupiedDays.add(primary.getDayOfWeek());
         responses.add(studentMapper.toWeeklyScheduleResponse(scheduleRepository.save(schedule)));
 
