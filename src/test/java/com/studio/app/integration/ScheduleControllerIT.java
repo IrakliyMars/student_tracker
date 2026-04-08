@@ -32,7 +32,46 @@ class ScheduleControllerIT extends BaseIntegrationTest {
                     .andExpect(jsonPath("$[0].studentId").value(1))
                     .andExpect(jsonPath("$[0].dayOfWeek").value("FRIDAY"))
                     .andExpect(jsonPath("$[0].startTime").value("16:00:00"))
-                    .andExpect(jsonPath("$[0].durationMinutes").value(45));
+                    .andExpect(jsonPath("$[0].durationMinutes").value(45))
+                    .andExpect(jsonPath("$[0].endTime").value("16:45:00"));
+        }
+
+        @Test
+        void shouldCreateUsingEndTimeOnly() throws Exception {
+            mockMvc.perform(post("/api/students/1/schedules")
+                            .contentType(JSON)
+                            .content("""
+                                    [
+                                      {
+                                        "dayOfWeek": "FRIDAY",
+                                        "startTime": "16:00",
+                                        "endTime": "16:45"
+                                      }
+                                    ]
+                                    """))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$", hasSize(1)))
+                    .andExpect(jsonPath("$[0].dayOfWeek").value("FRIDAY"))
+                    .andExpect(jsonPath("$[0].startTime").value("16:00:00"))
+                    .andExpect(jsonPath("$[0].durationMinutes").value(45))
+                    .andExpect(jsonPath("$[0].endTime").value("16:45:00"));
+        }
+
+        @Test
+        void shouldReturn400WhenDurationAndEndTimeMismatch() throws Exception {
+            mockMvc.perform(post("/api/students/1/schedules")
+                            .contentType(JSON)
+                            .content("""
+                                    [
+                                      {
+                                        "dayOfWeek": "FRIDAY",
+                                        "startTime": "16:00",
+                                        "durationMinutes": 60,
+                                        "endTime": "16:45"
+                                      }
+                                    ]
+                                    """))
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -99,7 +138,8 @@ class ScheduleControllerIT extends BaseIntegrationTest {
             mockMvc.perform(get("/api/students/1/schedules"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(2)))
-                    .andExpect(jsonPath("$[*].dayOfWeek", containsInAnyOrder("MONDAY", "WEDNESDAY")));
+                    .andExpect(jsonPath("$[*].dayOfWeek", containsInAnyOrder("MONDAY", "WEDNESDAY")))
+                    .andExpect(jsonPath("$[*].endTime", everyItem(notNullValue())));
         }
 
         @Test
@@ -130,7 +170,8 @@ class ScheduleControllerIT extends BaseIntegrationTest {
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].dayOfWeek").value("THURSDAY"))
                     .andExpect(jsonPath("$[0].startTime").value("11:00:00"))
-                    .andExpect(jsonPath("$[0].durationMinutes").value(90));
+                    .andExpect(jsonPath("$[0].durationMinutes").value(90))
+                    .andExpect(jsonPath("$[0].endTime").value("12:30:00"));
         }
 
         @Test
