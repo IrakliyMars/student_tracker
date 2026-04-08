@@ -11,13 +11,13 @@ import java.util.List;
 public interface ScheduleService {
 
     /**
-     * Adds a new recurring weekly slot for a student.
+     * Adds one or more recurring weekly slots for a student.
      *
      * @param studentId the student ID
-     * @param request   the schedule details
-     * @return the created schedule entry
+     * @param request   schedule details for each slot
+     * @return the created schedule entries
      */
-    WeeklyScheduleResponse addSchedule(Long studentId, WeeklyScheduleRequest request);
+    List<WeeklyScheduleResponse> addSchedule(Long studentId, List<WeeklyScheduleRequest> request);
 
     /**
      * Returns all active weekly schedule entries for a student.
@@ -28,14 +28,14 @@ public interface ScheduleService {
     List<WeeklyScheduleResponse> getSchedulesForStudent(Long studentId);
 
     /**
-     * Updates an existing weekly schedule slot.
+     * Updates an existing weekly schedule slot and may add more slots.
      *
      * @param studentId  the student ID
      * @param scheduleId the schedule entry ID
-     * @param request    the updated details
-     * @return the updated schedule entry
+     * @param request    updated details where first item updates scheduleId
+     * @return updated/created schedule entries
      */
-    WeeklyScheduleResponse updateSchedule(Long studentId, Long scheduleId, WeeklyScheduleRequest request);
+    List<WeeklyScheduleResponse> updateSchedule(Long studentId, Long scheduleId, List<WeeklyScheduleRequest> request);
 
     /**
      * Soft-deletes a recurring schedule entry.

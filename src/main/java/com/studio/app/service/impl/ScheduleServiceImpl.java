@@ -14,8 +14,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Default implementation of {@link ScheduleService}.
@@ -31,7 +34,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     /** {@inheritDoc} */
     @Override
-    public WeeklyScheduleResponse addSchedule(Long studentId, WeeklyScheduleRequest request) {
+    public List<WeeklyScheduleResponse> addSchedule(Long studentId, List<WeeklyScheduleRequest> request) {
+        if (request == null || request.isEmpty()) {
+            throw new BadRequestException("At least one schedule entry is required");
+        }
+
         var student = studentRepository.findByIdAndDeletedFalse(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student", studentId));
 
@@ -39,11 +46,22 @@ public class ScheduleServiceImpl implements ScheduleService {
             throw new BadRequestException("Cannot add schedules for a student who stopped attending");
         }
 
-        if (scheduleRepository.existsByStudentIdAndDayOfWeekAndDeletedFalse(studentId, request.getDayOfWeek())) {
-            throw new ConflictException("Student already has a schedule on " + request.getDayOfWeek());
-        }
+        Set<DayOfWeek> occupiedDays = new HashSet<>(scheduleRepository.findByStudentIdAndDeletedFalse(studentId)
+                .stream()
+                .map(WeeklySchedule::getDayOfWeek)
+                .toList());
 
-        var schedule = WeeklySchedule.builder()
+        return request.stream()
+                .map(item -> {
+                    validateDayAvailability(occupiedDays, item.getDayOfWeek());
+                    occupiedDays.add(item.getDayOfWeek());
+                    return studentMapper.toWeeklyScheduleResponse(scheduleRepository.save(buildSchedule(student, item)));
+                })
+                .toList();
+    }
+
+    private WeeklySchedule buildSchedule(com.studio.app.entity.Student student, WeeklyScheduleRequest request) {
+        return WeeklySchedule.builder()
                 .student(student)
                 .dayOfWeek(request.getDayOfWeek())
                 .startTime(request.getStartTime())
@@ -52,8 +70,12 @@ public class ScheduleServiceImpl implements ScheduleService {
                         ? LocalDate.now().toEpochDay()
                         : student.getStartDate().toEpochDay())
                 .build();
+    }
 
-        return studentMapper.toWeeklyScheduleResponse(scheduleRepository.save(schedule));
+    private void validateDayAvailability(Set<DayOfWeek> occupiedDays, DayOfWeek dayOfWeek) {
+        if (occupiedDays.contains(dayOfWeek)) {
+            throw new ConflictException("Student already has a schedule on " + dayOfWeek);
+        }
     }
 
     /** {@inheritDoc} */
@@ -71,7 +93,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     /** {@inheritDoc} */
     @Override
-    public WeeklyScheduleResponse updateSchedule(Long studentId, Long scheduleId, WeeklyScheduleRequest request) {
+    public List<WeeklyScheduleResponse> updateSchedule(Long studentId, Long scheduleId, List<WeeklyScheduleRequest> request) {
+        if (request == null || request.isEmpty()) {
+            throw new BadRequestException("At least one schedule entry is required");
+        }
+
         var schedule = scheduleRepository.findByIdAndStudentIdAndDeletedFalse(scheduleId, studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("WeeklySchedule", scheduleId));
 
@@ -79,16 +105,30 @@ public class ScheduleServiceImpl implements ScheduleService {
             throw new BadRequestException("Cannot update schedules for a student who stopped attending");
         }
 
-        var dayChanged = !schedule.getDayOfWeek().equals(request.getDayOfWeek());
-        if (dayChanged && scheduleRepository.existsByStudentIdAndDayOfWeekAndDeletedFalse(studentId, request.getDayOfWeek())) {
-            throw new ConflictException("Student already has a schedule on " + request.getDayOfWeek());
+        Set<DayOfWeek> occupiedDays = new HashSet<>(scheduleRepository.findByStudentIdAndDeletedFalse(studentId)
+                .stream()
+                .filter(item -> !item.getId().equals(scheduleId))
+                .map(WeeklySchedule::getDayOfWeek)
+                .toList());
+
+        var responses = new java.util.ArrayList<WeeklyScheduleResponse>(request.size());
+
+        var primary = request.get(0);
+        validateDayAvailability(occupiedDays, primary.getDayOfWeek());
+        schedule.setDayOfWeek(primary.getDayOfWeek());
+        schedule.setStartTime(primary.getStartTime());
+        schedule.setDurationMinutes(primary.getDurationMinutes());
+        occupiedDays.add(primary.getDayOfWeek());
+        responses.add(studentMapper.toWeeklyScheduleResponse(scheduleRepository.save(schedule)));
+
+        for (int i = 1; i < request.size(); i++) {
+            var item = request.get(i);
+            validateDayAvailability(occupiedDays, item.getDayOfWeek());
+            occupiedDays.add(item.getDayOfWeek());
+            responses.add(studentMapper.toWeeklyScheduleResponse(scheduleRepository.save(buildSchedule(schedule.getStudent(), item))));
         }
 
-        schedule.setDayOfWeek(request.getDayOfWeek());
-        schedule.setStartTime(request.getStartTime());
-        schedule.setDurationMinutes(request.getDurationMinutes());
-
-        return studentMapper.toWeeklyScheduleResponse(scheduleRepository.save(schedule));
+        return responses;
     }
 
     /** {@inheritDoc} */
