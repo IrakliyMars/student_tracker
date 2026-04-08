@@ -26,9 +26,17 @@ public class WeeklyScheduleRequest {
     @NotNull(message = "Start time is required")
     private LocalTime startTime;
 
-    /** Duration of each class occurrence in minutes. */
-    @NotNull(message = "Duration is required")
+    /**
+     * Duration of each class occurrence in minutes.
+     * Optional when endTime is provided.
+     */
     @Min(value = 15, message = "Duration must be at least 15 minutes")
     @Max(value = 480, message = "Duration cannot exceed 480 minutes")
     private Integer durationMinutes;
+
+    /**
+     * Alternative to durationMinutes.
+     * If provided, duration is derived as endTime - startTime.
+     */
+    private LocalTime endTime;
 }

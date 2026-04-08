@@ -93,6 +93,10 @@ for 60 minutes."
   individual class records**. You add those manually (see section 4)
 - You can remove a schedule slot at any time (it is just hidden, not deleted)
 
+API note (for frontend integration):
+- Create/update schedule endpoints accept a **list** of slots (JSON array), not a single object
+- On update (`/schedules/{scheduleId}`), the first item updates that `scheduleId`; extra items create new slots
+
 ---
 
 ## 4. Classes (Sessions)

@@ -328,13 +328,65 @@ Lifecycle fields:
 
 | Method | Path                                        | Description          |
 |--------|---------------------------------------------|----------------------|
-| POST   | `/api/students/{id}/schedules`              | Add a recurring slot |
+| POST   | `/api/students/{id}/schedules`              | Add one or more recurring slots |
 | GET    | `/api/students/{id}/schedules`              | Get all active slots |
-| POST   | `/api/students/{id}/schedules/{sid}`        | Update a slot        |
+| POST   | `/api/students/{id}/schedules/{sid}`        | Update slot `{sid}` and optionally add more slots |
 | POST   | `/api/students/{id}/schedules/{sid}/delete` | Remove a slot        |
 
+`POST /schedules` and `POST /schedules/{sid}` now accept a JSON array of `WeeklyScheduleRequest` and return a JSON array of `WeeklyScheduleResponse`.
+
+For update, the first array item updates `{sid}`; remaining items (if any) are created as new schedule slots.
+
+Time fields for each request item:
+- provide `startTime` + `durationMinutes`, or
+- provide `startTime` + `endTime` (duration is derived), or
+- provide all three only when they are consistent.
+
+Schedule responses always include both `durationMinutes` and `endTime`.
+
+**Add schedules request:**
 ```json
-{ "dayOfWeek": "MONDAY", "startTime": "10:00", "durationMinutes": 60 }
+[
+  { "dayOfWeek": "MONDAY", "startTime": "10:00", "durationMinutes": 60 },
+  { "dayOfWeek": "WEDNESDAY", "startTime": "10:00", "durationMinutes": 60 }
+]
+```
+
+**Add schedules response:**
+```json
+[
+  {
+    "id": 101,
+    "studentId": 12,
+    "dayOfWeek": "MONDAY",
+    "startTime": "10:00:00",
+    "durationMinutes": 60,
+    "endTime": "11:00:00"
+  },
+  {
+    "id": 102,
+    "studentId": 12,
+    "dayOfWeek": "WEDNESDAY",
+    "startTime": "10:00:00",
+    "durationMinutes": 60,
+    "endTime": "11:00:00"
+  }
+]
+```
+
+**Update schedules request (`/api/students/{id}/schedules/{sid}`):**
+```json
+[
+  { "dayOfWeek": "THURSDAY", "startTime": "11:00", "durationMinutes": 90 },
+  { "dayOfWeek": "FRIDAY", "startTime": "10:00", "durationMinutes": 60 }
+]
+```
+
+**Alternative request item using `endTime`:**
+```json
+[
+  { "dayOfWeek": "MONDAY", "startTime": "10:00", "endTime": "11:00" }
+]
 ```
 
 ---
