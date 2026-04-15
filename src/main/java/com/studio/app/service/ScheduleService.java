@@ -1,6 +1,7 @@
 package com.studio.app.service;
 
 import com.studio.app.dto.request.WeeklyScheduleRequest;
+import com.studio.app.dto.response.WeeklyPlanningScheduleResponse;
 import com.studio.app.dto.response.WeeklyScheduleResponse;
 
 import java.util.List;
@@ -26,6 +27,13 @@ public interface ScheduleService {
      * @return list of schedule responses
      */
     List<WeeklyScheduleResponse> getSchedulesForStudent(Long studentId);
+
+    /**
+     * Returns all active recurring weekly slots for global weekly planning.
+     *
+     * @return list of weekly planning rows across active students
+     */
+    List<WeeklyPlanningScheduleResponse> getSchedulesForWeeklyPlanning();
 
     /**
      * Updates an existing weekly schedule slot and may add more slots.

@@ -151,6 +151,36 @@ class ScheduleControllerIT extends BaseIntegrationTest {
     }
 
     @Nested
+    class GetWeeklyPlanningSchedules {
+
+        @Test
+        void shouldReturnAllActiveRegularSchedules() throws Exception {
+            mockMvc.perform(get("/api/students/schedules/weekly-planning"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(3)))
+                    .andExpect(jsonPath("$[*].studentId", containsInAnyOrder(1, 1, 2)))
+                    .andExpect(jsonPath("$[*].studentName", hasItems("Ana García", "Ivan Petrov")))
+                    .andExpect(jsonPath("$[*].timezone", everyItem(notNullValue())))
+                    .andExpect(jsonPath("$[*].endTime", everyItem(notNullValue())));
+        }
+
+        @Test
+        void shouldExcludeStoppedAttendingStudents() throws Exception {
+            mockMvc.perform(patch("/api/students/2")
+                            .contentType(JSON)
+                            .content("""
+                                    { "stoppedAttending": true }
+                                    """))
+                    .andExpect(status().isOk());
+
+            mockMvc.perform(get("/api/students/schedules/weekly-planning"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(2)))
+                    .andExpect(jsonPath("$[*].studentId", everyItem(is(1))));
+        }
+    }
+
+    @Nested
     class UpdateSchedule {
 
         @Test

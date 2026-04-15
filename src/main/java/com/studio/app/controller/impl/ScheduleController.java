@@ -1,6 +1,7 @@
 package com.studio.app.controller.impl;
 import com.studio.app.controller.ScheduleApi;
 import com.studio.app.dto.request.WeeklyScheduleRequest;
+import com.studio.app.dto.response.WeeklyPlanningScheduleResponse;
 import com.studio.app.dto.response.WeeklyScheduleResponse;
 import com.studio.app.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,12 @@ public class ScheduleController implements ScheduleApi {
     @Override
     public ResponseEntity<List<WeeklyScheduleResponse>> getSchedules(Long studentId) {
         return ResponseEntity.ok(scheduleService.getSchedulesForStudent(studentId));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ResponseEntity<List<WeeklyPlanningScheduleResponse>> getWeeklyPlanningSchedules() {
+        return ResponseEntity.ok(scheduleService.getSchedulesForWeeklyPlanning());
     }
 
     /** {@inheritDoc} */
