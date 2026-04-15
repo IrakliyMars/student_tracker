@@ -2,6 +2,7 @@ package com.studio.app.controller;
 
 import com.studio.app.constant.ApiConstants;
 import com.studio.app.dto.request.WeeklyScheduleRequest;
+import com.studio.app.dto.response.WeeklyPlanningScheduleResponse;
 import com.studio.app.dto.response.WeeklyScheduleResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +31,7 @@ public interface ScheduleApi {
     @Operation(summary = "Add weekly schedules", description = "Creates one or more recurring weekly class slots for the student.")
     @PostMapping("/{studentId}/schedules")
     ResponseEntity<List<WeeklyScheduleResponse>> addSchedule(@PathVariable Long studentId,
-                                                             @NotEmpty @RequestBody List<@Valid WeeklyScheduleRequest> request);
+                                                             @Valid @NotEmpty @RequestBody List<@Valid WeeklyScheduleRequest> request);
 
     /**
      * Returns all active weekly schedule slots for the student.
@@ -41,6 +42,16 @@ public interface ScheduleApi {
     @Operation(summary = "List schedules", description = "Returns all active weekly schedule slots for the student.")
     @GetMapping("/{studentId}/schedules")
     ResponseEntity<List<WeeklyScheduleResponse>> getSchedules(@PathVariable Long studentId);
+
+    /**
+     * Returns all active recurring weekly slots across students for planning UI.
+     *
+     * @return a list of {@link WeeklyPlanningScheduleResponse} rows
+     */
+    @Operation(summary = "List weekly planning schedules",
+            description = "Returns all active recurring weekly schedule slots across students for weekly planning screens.")
+    @GetMapping("/schedules/weekly-planning")
+    ResponseEntity<List<WeeklyPlanningScheduleResponse>> getWeeklyPlanningSchedules();
 
     /**
      * Updates an existing weekly schedule slot and optionally creates additional ones.
@@ -54,7 +65,7 @@ public interface ScheduleApi {
     @PostMapping("/{studentId}/schedules/{scheduleId}")
     ResponseEntity<List<WeeklyScheduleResponse>> updateSchedule(@PathVariable Long studentId,
                                                                 @PathVariable Long scheduleId,
-                                                                @NotEmpty @RequestBody List<@Valid WeeklyScheduleRequest> request);
+                                                                @Valid @NotEmpty @RequestBody List<@Valid WeeklyScheduleRequest> request);
 
     /**
      * Soft-deletes a recurring schedule slot.

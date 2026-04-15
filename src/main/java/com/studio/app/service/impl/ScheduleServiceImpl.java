@@ -1,6 +1,7 @@
 package com.studio.app.service.impl;
 
 import com.studio.app.dto.request.WeeklyScheduleRequest;
+import com.studio.app.dto.response.WeeklyPlanningScheduleResponse;
 import com.studio.app.dto.response.WeeklyScheduleResponse;
 import com.studio.app.entity.WeeklySchedule;
 import com.studio.app.exception.BadRequestException;
@@ -39,6 +40,8 @@ public class ScheduleServiceImpl implements ScheduleService {
         if (request == null || request.isEmpty()) {
             throw new BadRequestException("At least one schedule entry is required");
         }
+
+        validateRequestItems(request);
 
         var student = studentRepository.findByIdAndDeletedFalse(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student", studentId));
@@ -84,6 +87,9 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
 
         if (duration != null && endTime == null) {
+            if (duration < 15 || duration > 480) {
+                throw new BadRequestException("Duration must be between 15 and 480 minutes");
+            }
             return duration;
         }
 
@@ -114,6 +120,21 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
     }
 
+    private void validateRequestItems(List<WeeklyScheduleRequest> request) {
+        for (int i = 0; i < request.size(); i++) {
+            var item = request.get(i);
+            if (item == null) {
+                throw new BadRequestException("Schedule entry at index " + i + " is required");
+            }
+            if (item.getDayOfWeek() == null) {
+                throw new BadRequestException("Day of week is required");
+            }
+            if (item.getStartTime() == null) {
+                throw new BadRequestException("Start time is required");
+            }
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
@@ -129,10 +150,31 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     /** {@inheritDoc} */
     @Override
+    @Transactional(readOnly = true)
+    public List<WeeklyPlanningScheduleResponse> getSchedulesForWeeklyPlanning() {
+        return scheduleRepository.findAllForWeeklyPlanning()
+                .stream()
+                .map(schedule -> WeeklyPlanningScheduleResponse.builder()
+                        .id(schedule.getId())
+                        .studentId(schedule.getStudent().getId())
+                        .studentName(schedule.getStudent().getFirstName() + " " + schedule.getStudent().getLastName())
+                        .timezone(schedule.getStudent().getTimezone())
+                        .dayOfWeek(schedule.getDayOfWeek())
+                        .startTime(schedule.getStartTime())
+                        .durationMinutes(schedule.getDurationMinutes())
+                        .endTime(schedule.getStartTime().plusMinutes(schedule.getDurationMinutes()))
+                        .build())
+                .toList();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<WeeklyScheduleResponse> updateSchedule(Long studentId, Long scheduleId, List<WeeklyScheduleRequest> request) {
         if (request == null || request.isEmpty()) {
             throw new BadRequestException("At least one schedule entry is required");
         }
+
+        validateRequestItems(request);
 
         var schedule = scheduleRepository.findByIdAndStudentIdAndDeletedFalse(scheduleId, studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("WeeklySchedule", scheduleId));

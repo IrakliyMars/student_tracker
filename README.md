@@ -330,6 +330,7 @@ Lifecycle fields:
 |--------|---------------------------------------------|----------------------|
 | POST   | `/api/students/{id}/schedules`              | Add one or more recurring slots |
 | GET    | `/api/students/{id}/schedules`              | Get all active slots |
+| GET    | `/api/students/schedules/weekly-planning`   | Get all active regular weekly slots (all students); excludes one-off/extra/moved sessions |
 | POST   | `/api/students/{id}/schedules/{sid}`        | Update slot `{sid}` and optionally add more slots |
 | POST   | `/api/students/{id}/schedules/{sid}/delete` | Remove a slot        |
 
@@ -386,6 +387,24 @@ Schedule responses always include both `durationMinutes` and `endTime`.
 ```json
 [
   { "dayOfWeek": "MONDAY", "startTime": "10:00", "endTime": "11:00" }
+]
+```
+
+**Weekly planning response (`GET /api/students/schedules/weekly-planning`):**
+
+This endpoint returns only recurring weekly schedule templates and does not include one-off outlier sessions.
+```json
+[
+  {
+    "id": 1,
+    "studentId": 1,
+    "studentName": "Ana Garcia",
+    "timezone": "SPAIN",
+    "dayOfWeek": "MONDAY",
+    "startTime": "10:00:00",
+    "durationMinutes": 60,
+    "endTime": "11:00:00"
+  }
 ]
 ```
 

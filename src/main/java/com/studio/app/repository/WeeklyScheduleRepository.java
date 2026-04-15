@@ -2,6 +2,7 @@ package com.studio.app.repository;
 
 import com.studio.app.entity.WeeklySchedule;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.DayOfWeek;
@@ -22,4 +23,16 @@ public interface WeeklyScheduleRepository extends JpaRepository<WeeklySchedule, 
 
     /** Checks whether a student already has a recurring slot on the given day. */
     boolean existsByStudentIdAndDayOfWeekAndDeletedFalse(Long studentId, DayOfWeek dayOfWeek);
+
+    /** Returns all active weekly slots for weekly planning UI. */
+    @Query("""
+            select ws
+            from WeeklySchedule ws
+            join fetch ws.student s
+            where ws.deleted = false
+              and s.deleted = false
+              and s.stoppedAttending = false
+            order by ws.dayOfWeek, ws.startTime, s.firstName, s.lastName
+            """)
+    List<WeeklySchedule> findAllForWeeklyPlanning();
 }
