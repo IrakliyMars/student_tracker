@@ -4,10 +4,12 @@ import com.studio.app.dto.request.PayerRequest;
 import com.studio.app.dto.response.PayerResponse;
 import com.studio.app.service.PayerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.List;
 
 /**
  * REST controller implementation for student payer operations.
@@ -27,8 +29,10 @@ public class PayerController implements PayerApi {
 
     /** {@inheritDoc} */
     @Override
-    public ResponseEntity<List<PayerResponse>> getPayersForStudent(Long studentId) {
-        return ResponseEntity.ok(payerService.getPayersForStudent(studentId));
+    public ResponseEntity<Page<PayerResponse>> getPayersForStudent(Long studentId, int page, int size) {
+        var pageable = PageRequest.of(page, size,
+                Sort.by("fullName").ascending().and(Sort.by("id")));
+        return ResponseEntity.ok(payerService.getPayersForStudent(studentId, pageable));
     }
 
     /** {@inheritDoc} */

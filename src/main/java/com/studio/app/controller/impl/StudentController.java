@@ -5,6 +5,9 @@ import com.studio.app.dto.request.UpdateStudentRequest;
 import com.studio.app.dto.response.StudentResponse;
 import com.studio.app.service.StudentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,10 +30,16 @@ public class StudentController implements StudentApi {
 
     /** {@inheritDoc} */
     @Override
-    public ResponseEntity<List<StudentResponse>> getAllStudents(String search, Boolean debtor, Boolean packagePricing) {
+    public ResponseEntity<Page<StudentResponse>> getAllStudents(String search,
+                                                                Boolean debtor,
+                                                                Boolean packagePricing,
+                                                                int page,
+                                                                int size) {
+        var pageable = PageRequest.of(page, size,
+                Sort.by("firstName").ascending().and(Sort.by("lastName")).and(Sort.by("id")));
         var result = (search != null && !search.isBlank())
-                ? studentService.searchStudents(search, debtor, packagePricing)
-                : studentService.getAllStudents(debtor, packagePricing);
+                ? studentService.searchStudents(search, debtor, packagePricing, pageable)
+                : studentService.getAllStudents(debtor, packagePricing, pageable);
         return ResponseEntity.ok(result);
     }
 

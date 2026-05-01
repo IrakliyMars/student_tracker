@@ -6,10 +6,10 @@ import com.studio.app.dto.response.PayerResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 /**
  * REST API contract for student payer operations.
@@ -37,9 +37,11 @@ public interface PayerApi {
      * @param studentId the ID of the student
      * @return a list of {@link PayerResponse} objects
      */
-    @Operation(summary = "List payers", description = "Returns all payers registered for a student.")
+    @Operation(summary = "List payers", description = "Returns all payers registered for a student. Supports pagination via page/size.")
     @GetMapping("/{studentId}/payers")
-    ResponseEntity<List<PayerResponse>> getPayersForStudent(@PathVariable Long studentId);
+    ResponseEntity<Page<PayerResponse>> getPayersForStudent(@PathVariable Long studentId,
+                                                            @RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "20") int size);
 
     /**
      * Updates an existing payer's details (name, phone, note).

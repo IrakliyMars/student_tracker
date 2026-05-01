@@ -7,6 +7,7 @@ import com.studio.app.dto.response.StudentResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,12 +46,14 @@ public interface StudentApi {
      * @param packagePricing optional pricing-mode filter; true=PACKAGE, false=PER_CLASS
      * @return a list of {@link StudentResponse} objects
      */
-    @Operation(summary = "List all students", description = "Returns all active students. Pass optional 'search', 'debtor', and 'packagePricing' params to filter the results.")
+    @Operation(summary = "List all students", description = "Returns all active students. Pass optional 'search', 'debtor', and 'packagePricing' params to filter the results. Supports pagination via page/size.")
     @GetMapping
-    ResponseEntity<List<StudentResponse>> getAllStudents(
+    ResponseEntity<Page<StudentResponse>> getAllStudents(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean debtor,
-            @RequestParam(required = false) Boolean packagePricing);
+            @RequestParam(required = false) Boolean packagePricing,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size);
 
     /**
      * Searches active students by student name or payer full name.

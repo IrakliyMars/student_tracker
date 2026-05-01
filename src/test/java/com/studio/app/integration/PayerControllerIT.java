@@ -60,16 +60,17 @@ class PayerControllerIT extends BaseIntegrationTest {
         void shouldReturnPayersForStudent() throws Exception {
             mockMvc.perform(get("/api/students/1/payers"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(1)))
-                    .andExpect(jsonPath("$[0].fullName").value("María García"))
-                    .andExpect(jsonPath("$[0].note").value("Mother"));
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].fullName").value("María García"))
+                    .andExpect(jsonPath("$.content[0].note").value("Mother"));
         }
 
         @Test
         void shouldReturnEmptyForStudentWithNoPayers() throws Exception {
             mockMvc.perform(get("/api/students/3/payers"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(0)));
+                    .andExpect(jsonPath("$.content", hasSize(0)))
+                    .andExpect(jsonPath("$.totalElements").value(0));
         }
     }
 
@@ -115,7 +116,7 @@ class PayerControllerIT extends BaseIntegrationTest {
             // Verify soft-deleted
             mockMvc.perform(get("/api/students/1/payers"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(0)));
+                    .andExpect(jsonPath("$.content", hasSize(0)));
         }
 
         @Test
