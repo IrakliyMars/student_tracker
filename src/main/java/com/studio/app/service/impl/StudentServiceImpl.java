@@ -18,6 +18,8 @@ import com.studio.app.repository.WeeklyScheduleRepository;
 import com.studio.app.service.CurrencyConversionService;
 import com.studio.app.service.StudentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,29 +73,21 @@ public class StudentServiceImpl implements StudentService {
     /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
-    public List<StudentResponse> getAllStudents() {
-        return getAllStudents(null);
-    }
+    public Page<StudentResponse> getAllStudents(Boolean debtor, Boolean packagePricing, Pageable pageable) {
+        PricingType pricingType = resolvePricingType(packagePricing);
+        Page<Student> students;
 
-    /** {@inheritDoc} */
-    @Override
-    @Transactional(readOnly = true)
-    public List<StudentResponse> getAllStudents(Boolean debtor) {
-        return getAllStudents(debtor, null);
-    }
+        if (debtor == null && pricingType == null) {
+            students = studentRepository.findAllByDeletedFalse(pageable);
+        } else if (debtor != null && pricingType == null) {
+            students = studentRepository.findAllByDeletedFalseAndDebtor(debtor, pageable);
+        } else if (debtor == null) {
+            students = studentRepository.findAllByDeletedFalseAndPricingType(pricingType, pageable);
+        } else {
+            students = studentRepository.findAllByDeletedFalseAndDebtorAndPricingType(debtor, pricingType, pageable);
+        }
 
-    /** {@inheritDoc} */
-    @Override
-    @Transactional(readOnly = true)
-    public List<StudentResponse> getAllStudents(Boolean debtor, Boolean packagePricing) {
-        var students = debtor == null
-                ? studentRepository.findAllByDeletedFalse()
-                : studentRepository.findAllByDeletedFalseAndDebtor(debtor);
-
-        return students.stream()
-                .filter(student -> matchesPackagePricing(student, packagePricing))
-                .map(this::toResponse)
-                .toList();
+        return students.map(this::toResponse);
     }
 
     /** {@inheritDoc} */
@@ -152,29 +146,21 @@ public class StudentServiceImpl implements StudentService {
     /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
-    public List<StudentResponse> searchStudents(String query) {
-        return searchStudents(query, null);
-    }
+    public Page<StudentResponse> searchStudents(String query, Boolean debtor, Boolean packagePricing, Pageable pageable) {
+        PricingType pricingType = resolvePricingType(packagePricing);
+        Page<Student> students;
 
-    /** {@inheritDoc} */
-    @Override
-    @Transactional(readOnly = true)
-    public List<StudentResponse> searchStudents(String query, Boolean debtor) {
-        return searchStudents(query, debtor, null);
-    }
+        if (debtor == null && pricingType == null) {
+            students = studentRepository.searchByName(query, pageable);
+        } else if (debtor != null && pricingType == null) {
+            students = studentRepository.searchByNameAndDebtor(query, debtor, pageable);
+        } else if (debtor == null) {
+            students = studentRepository.searchByNameAndPricingType(query, pricingType, pageable);
+        } else {
+            students = studentRepository.searchByNameAndDebtorAndPricingType(query, debtor, pricingType, pageable);
+        }
 
-    /** {@inheritDoc} */
-    @Override
-    @Transactional(readOnly = true)
-    public List<StudentResponse> searchStudents(String query, Boolean debtor, Boolean packagePricing) {
-        var students = debtor == null
-                ? studentRepository.searchByName(query)
-                : studentRepository.searchByNameAndDebtor(query, debtor);
-
-        return students.stream()
-                .filter(student -> matchesPackagePricing(student, packagePricing))
-                .map(this::toResponse)
-                .toList();
+        return students.map(this::toResponse);
     }
 
     /** {@inheritDoc} */
@@ -216,13 +202,11 @@ public class StudentServiceImpl implements StudentService {
         return response;
     }
 
-    private boolean matchesPackagePricing(Student student, Boolean packagePricing) {
+    private PricingType resolvePricingType(Boolean packagePricing) {
         if (packagePricing == null) {
-            return true;
+            return null;
         }
-        return packagePricing
-                ? student.getPricingType() == PricingType.PACKAGE
-                : student.getPricingType() == PricingType.PER_CLASS;
+        return packagePricing ? PricingType.PACKAGE : PricingType.PER_CLASS;
     }
 
     private Student findActiveStudent(Long id) {

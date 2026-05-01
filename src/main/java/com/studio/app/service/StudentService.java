@@ -3,8 +3,11 @@ package com.studio.app.service;
 import com.studio.app.dto.request.CreateStudentRequest;
 import com.studio.app.dto.request.UpdateStudentRequest;
 import com.studio.app.dto.response.StudentResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+
 
 /**
  * Service interface for managing students.
@@ -24,24 +27,7 @@ public interface StudentService {
      *
      * @return list of student responses
      */
-    List<StudentResponse> getAllStudents();
-
-    /**
-     * Returns active students, optionally filtered by debtor flag.
-     *
-     * @param debtor debtor flag filter; when {@code null}, no debtor filtering is applied
-     * @return list of student responses
-     */
-    List<StudentResponse> getAllStudents(Boolean debtor);
-
-    /**
-     * Returns active students with optional debtor and pricing-mode filters.
-     *
-     * @param debtor debtor flag filter; when {@code null}, no debtor filtering is applied
-     * @param packagePricing pricing filter; true=PACKAGE, false=PER_CLASS, null=no pricing filter
-     * @return list of student responses
-     */
-    List<StudentResponse> getAllStudents(Boolean debtor, Boolean packagePricing);
+    Page<StudentResponse> getAllStudents(Boolean debtor, Boolean packagePricing, Pageable pageable);
 
     /**
      * Returns a student by ID.
@@ -73,26 +59,7 @@ public interface StudentService {
      * @param query the search string
      * @return matched students
      */
-    List<StudentResponse> searchStudents(String query);
-
-    /**
-     * Searches students by partial name match with optional debtor filtering.
-     *
-     * @param query the search string
-     * @param debtor debtor flag filter; when {@code null}, no debtor filtering is applied
-     * @return matched students
-     */
-    List<StudentResponse> searchStudents(String query, Boolean debtor);
-
-    /**
-     * Searches students by partial name match with optional debtor and pricing-mode filters.
-     *
-     * @param query the search string
-     * @param debtor debtor flag filter; when {@code null}, no debtor filtering is applied
-     * @param packagePricing pricing filter; true=PACKAGE, false=PER_CLASS, null=no pricing filter
-     * @return matched students
-     */
-    List<StudentResponse> searchStudents(String query, Boolean debtor, Boolean packagePricing);
+    Page<StudentResponse> searchStudents(String query, Boolean debtor, Boolean packagePricing, Pageable pageable);
 
     /**
      * Searches active students by either student name or payer full name (case-insensitive).

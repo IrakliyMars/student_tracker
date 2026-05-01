@@ -27,6 +27,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -258,77 +260,89 @@ class StudentServiceImplTest {
 
         @Test
         void getAllStudents_shouldReturnOnlyActive() {
-            when(studentRepository.findAllByDeletedFalse()).thenReturn(List.of(activeStudent));
+            var pageable = PageRequest.of(0, 20);
+            when(studentRepository.findAllByDeletedFalse(pageable))
+                    .thenReturn(new PageImpl<>(List.of(activeStudent), pageable, 1));
             when(studentMapper.toResponse(activeStudent)).thenReturn(studentResponse);
             when(currencyConversionService.convertToAll(any(), any())).thenReturn(Collections.emptyMap());
 
-            var result = studentService.getAllStudents();
+            var result = studentService.getAllStudents(null, null, pageable);
 
-            assertThat(result).hasSize(1);
+            assertThat(result.getContent()).hasSize(1);
         }
 
         @Test
         void getAllStudents_shouldFilterByDebtor_whenParamPresent() {
-            when(studentRepository.findAllByDeletedFalseAndDebtor(true)).thenReturn(List.of(activeStudent));
+            var pageable = PageRequest.of(0, 20);
+            when(studentRepository.findAllByDeletedFalseAndDebtor(true, pageable))
+                    .thenReturn(new PageImpl<>(List.of(activeStudent), pageable, 1));
             when(studentMapper.toResponse(activeStudent)).thenReturn(studentResponse);
             when(currencyConversionService.convertToAll(any(), any())).thenReturn(Collections.emptyMap());
 
-            var result = studentService.getAllStudents(true);
+            var result = studentService.getAllStudents(true, null, pageable);
 
-            assertThat(result).hasSize(1);
-            verify(studentRepository).findAllByDeletedFalseAndDebtor(true);
-            verify(studentRepository, never()).findAllByDeletedFalse();
+            assertThat(result.getContent()).hasSize(1);
+            verify(studentRepository).findAllByDeletedFalseAndDebtor(true, pageable);
+            verify(studentRepository, never()).findAllByDeletedFalse(pageable);
         }
 
         @Test
         void getAllStudents_shouldFilterByPackagePricing_whenParamPresent() {
             activeStudent.setPricingType(PricingType.PACKAGE);
-            when(studentRepository.findAllByDeletedFalse()).thenReturn(List.of(activeStudent));
+            var pageable = PageRequest.of(0, 20);
+            when(studentRepository.findAllByDeletedFalseAndPricingType(PricingType.PACKAGE, pageable))
+                    .thenReturn(new PageImpl<>(List.of(activeStudent), pageable, 1));
             when(studentMapper.toResponse(activeStudent)).thenReturn(studentResponse);
             when(currencyConversionService.convertToAll(any(), any())).thenReturn(Collections.emptyMap());
 
-            var result = studentService.getAllStudents(null, true);
+            var result = studentService.getAllStudents(null, true, pageable);
 
-            assertThat(result).hasSize(1);
-            verify(studentRepository).findAllByDeletedFalse();
+            assertThat(result.getContent()).hasSize(1);
+            verify(studentRepository).findAllByDeletedFalseAndPricingType(PricingType.PACKAGE, pageable);
         }
 
         @Test
         void searchStudents_shouldDelegateToRepository() {
-            when(studentRepository.searchByName("Ana")).thenReturn(List.of(activeStudent));
+            var pageable = PageRequest.of(0, 20);
+            when(studentRepository.searchByName("Ana", pageable))
+                    .thenReturn(new PageImpl<>(List.of(activeStudent), pageable, 1));
             when(studentMapper.toResponse(activeStudent)).thenReturn(studentResponse);
             when(currencyConversionService.convertToAll(any(), any())).thenReturn(Collections.emptyMap());
 
-            var result = studentService.searchStudents("Ana");
+            var result = studentService.searchStudents("Ana", null, null, pageable);
 
-            assertThat(result).hasSize(1);
-            verify(studentRepository).searchByName("Ana");
+            assertThat(result.getContent()).hasSize(1);
+            verify(studentRepository).searchByName("Ana", pageable);
         }
 
         @Test
         void searchStudents_shouldUseDebtorAwareQuery_whenDebtorFilterPresent() {
-            when(studentRepository.searchByNameAndDebtor("Ana", true)).thenReturn(List.of(activeStudent));
+            var pageable = PageRequest.of(0, 20);
+            when(studentRepository.searchByNameAndDebtor("Ana", true, pageable))
+                    .thenReturn(new PageImpl<>(List.of(activeStudent), pageable, 1));
             when(studentMapper.toResponse(activeStudent)).thenReturn(studentResponse);
             when(currencyConversionService.convertToAll(any(), any())).thenReturn(Collections.emptyMap());
 
-            var result = studentService.searchStudents("Ana", true);
+            var result = studentService.searchStudents("Ana", true, null, pageable);
 
-            assertThat(result).hasSize(1);
-            verify(studentRepository).searchByNameAndDebtor("Ana", true);
-            verify(studentRepository, never()).searchByName("Ana");
+            assertThat(result.getContent()).hasSize(1);
+            verify(studentRepository).searchByNameAndDebtor("Ana", true, pageable);
+            verify(studentRepository, never()).searchByName("Ana", pageable);
         }
 
         @Test
         void searchStudents_shouldApplyPackagePricingFilter_whenPresent() {
             activeStudent.setPricingType(PricingType.PACKAGE);
-            when(studentRepository.searchByName("Ana")).thenReturn(List.of(activeStudent));
+            var pageable = PageRequest.of(0, 20);
+            when(studentRepository.searchByNameAndPricingType("Ana", PricingType.PACKAGE, pageable))
+                    .thenReturn(new PageImpl<>(List.of(activeStudent), pageable, 1));
             when(studentMapper.toResponse(activeStudent)).thenReturn(studentResponse);
             when(currencyConversionService.convertToAll(any(), any())).thenReturn(Collections.emptyMap());
 
-            var result = studentService.searchStudents("Ana", null, true);
+            var result = studentService.searchStudents("Ana", null, true, pageable);
 
-            assertThat(result).hasSize(1);
-            verify(studentRepository).searchByName("Ana");
+            assertThat(result.getContent()).hasSize(1);
+            verify(studentRepository).searchByNameAndPricingType("Ana", PricingType.PACKAGE, pageable);
         }
 
         @Test

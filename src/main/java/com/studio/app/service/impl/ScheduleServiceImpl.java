@@ -119,7 +119,6 @@ public class ScheduleServiceImpl implements ScheduleService {
             throw new ConflictException("Student already has a schedule on " + dayOfWeek);
         }
     }
-
     private void validateRequestItems(List<WeeklyScheduleRequest> request) {
         for (int i = 0; i < request.size(); i++) {
             var item = request.get(i);
@@ -191,7 +190,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         var responses = new java.util.ArrayList<WeeklyScheduleResponse>(request.size());
 
-        var primary = request.get(0);
+        var primary = request.getFirst();
         validateDayAvailability(occupiedDays, primary.getDayOfWeek());
         schedule.setDayOfWeek(primary.getDayOfWeek());
         schedule.setStartTime(primary.getStartTime());

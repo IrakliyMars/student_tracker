@@ -2,8 +2,9 @@ package com.studio.app.service;
 
 import com.studio.app.dto.request.PayerRequest;
 import com.studio.app.dto.response.PayerResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 
 /**
  * Service interface for managing payers attached to a student.
@@ -25,7 +26,7 @@ public interface PayerService {
      * @param studentId the student ID
      * @return list of payers
      */
-    List<PayerResponse> getPayersForStudent(Long studentId);
+    Page<PayerResponse> getPayersForStudent(Long studentId, Pageable pageable);
 
     /**
      * Updates an existing payer's details.
