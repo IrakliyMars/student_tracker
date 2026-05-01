@@ -9,10 +9,11 @@ import com.studio.app.repository.PayerRepository;
 import com.studio.app.repository.StudentRepository;
 import com.studio.app.service.PayerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -46,12 +47,12 @@ public class PayerServiceImpl implements PayerService {
     /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
-    public List<PayerResponse> getPayersForStudent(Long studentId) {
+    public Page<PayerResponse> getPayersForStudent(Long studentId, Pageable pageable) {
         studentRepository.findByIdAndDeletedFalse(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student", studentId));
 
-        return payerMapper.toResponseList(
-                payerRepository.findByStudentIdAndDeletedFalse(studentId));
+        return payerRepository.findByStudentIdAndDeletedFalse(studentId, pageable)
+                .map(payerMapper::toResponse);
     }
 
     /** {@inheritDoc} */

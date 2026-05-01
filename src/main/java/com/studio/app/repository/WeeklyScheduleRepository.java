@@ -25,14 +25,14 @@ public interface WeeklyScheduleRepository extends JpaRepository<WeeklySchedule, 
     boolean existsByStudentIdAndDayOfWeekAndDeletedFalse(Long studentId, DayOfWeek dayOfWeek);
 
     /** Returns all active weekly slots for weekly planning UI. */
-    @Query("""
-            select ws
-            from WeeklySchedule ws
-            join fetch ws.student s
-            where ws.deleted = false
-              and s.deleted = false
-              and s.stoppedAttending = false
-            order by ws.dayOfWeek, ws.startTime, s.firstName, s.lastName
-            """)
+    @Query(value = """
+            SELECT ws.*
+            FROM studio.weekly_schedules ws
+            JOIN studio.students s ON s.id = ws.student_id
+            WHERE ws.deleted = false
+              AND s.deleted = false
+              AND s.stopped_attending = false
+            ORDER BY ws.day_of_week, ws.start_time, s.first_name, s.last_name
+            """, nativeQuery = true)
     List<WeeklySchedule> findAllForWeeklyPlanning();
 }

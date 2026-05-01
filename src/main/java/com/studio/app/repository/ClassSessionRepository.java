@@ -29,14 +29,15 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             Long studentId, LocalDate to);
 
     /** Non-deleted sessions for a student within an inclusive date range. */
-    @Query("""
-            SELECT cs FROM ClassSession cs
-            WHERE cs.student.id = :studentId
-              AND cs.deleted     = false
-              AND cs.classDate  >= :from
-              AND cs.classDate  <= :to
-            ORDER BY cs.classDate, cs.startTime
-            """)
+    @Query(value = """
+            SELECT cs.*
+            FROM studio.class_sessions cs
+            WHERE cs.student_id = :studentId
+              AND cs.deleted = false
+              AND cs.class_date >= :from
+              AND cs.class_date <= :to
+            ORDER BY cs.class_date, cs.start_time
+            """, nativeQuery = true)
     List<ClassSession> findByStudentIdAndDateRange(
             @Param("studentId") Long studentId,
             @Param("from") LocalDate from,
@@ -46,15 +47,16 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
      * Calendar query — all non-deleted sessions across all students
      * within a date range, ordered chronologically.
      */
-    @Query("""
-            SELECT cs FROM ClassSession cs
-            JOIN FETCH cs.student s
-            WHERE cs.deleted    = false
-              AND s.deleted     = false
-              AND cs.classDate >= :from
-              AND cs.classDate <= :to
-            ORDER BY cs.classDate, cs.startTime
-            """)
+    @Query(value = """
+            SELECT cs.*
+            FROM studio.class_sessions cs
+            JOIN studio.students s ON s.id = cs.student_id
+            WHERE cs.deleted = false
+              AND s.deleted = false
+              AND cs.class_date >= :from
+              AND cs.class_date <= :to
+            ORDER BY cs.class_date, cs.start_time
+            """, nativeQuery = true)
     List<ClassSession> findCalendarSessions(
             @Param("from") LocalDate from,
             @Param("to") LocalDate to);
@@ -73,16 +75,17 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
      * Finds all PAID (per-class) sessions within a date range, excluding PACKAGE payments.
      * Used for earnings aggregation.
      */
-    @Query("""
-            SELECT cs FROM ClassSession cs
-            JOIN FETCH cs.student s
-            WHERE cs.deleted        = false
-              AND s.deleted         = false
-              AND cs.paymentStatus  = 'PAID'
-              AND cs.classDate     >= :from
-              AND cs.classDate     <= :to
-            ORDER BY cs.classDate, cs.startTime
-            """)
+    @Query(value = """
+            SELECT cs.*
+            FROM studio.class_sessions cs
+            JOIN studio.students s ON s.id = cs.student_id
+            WHERE cs.deleted = false
+              AND s.deleted = false
+              AND cs.payment_status = 'PAID'
+              AND cs.class_date >= :from
+              AND cs.class_date <= :to
+            ORDER BY cs.class_date, cs.start_time
+            """, nativeQuery = true)
     List<ClassSession> findPaidSessionsByDateRange(
             @Param("from") LocalDate from,
             @Param("to") LocalDate to);
@@ -91,17 +94,18 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
      * Finds per-class sessions in a date range that are collectible or already earned.
      * Includes PAID and UNPAID sessions, excludes CANCELLED and PACKAGE-covered sessions.
      */
-    @Query("""
-            SELECT cs FROM ClassSession cs
-            JOIN FETCH cs.student s
-            WHERE cs.deleted        = false
-              AND s.deleted         = false
-              AND cs.paymentStatus IN ('PAID', 'UNPAID')
-              AND cs.status        <> 'CANCELLED'
-              AND cs.classDate     >= :from
-              AND cs.classDate     <= :to
-            ORDER BY cs.classDate, cs.startTime
-            """)
+    @Query(value = """
+            SELECT cs.*
+            FROM studio.class_sessions cs
+            JOIN studio.students s ON s.id = cs.student_id
+            WHERE cs.deleted = false
+              AND s.deleted = false
+              AND cs.payment_status IN ('PAID', 'UNPAID')
+              AND cs.status <> 'CANCELLED'
+              AND cs.class_date >= :from
+              AND cs.class_date <= :to
+            ORDER BY cs.class_date, cs.start_time
+            """, nativeQuery = true)
     List<ClassSession> findCollectiblePerClassSessionsByDateRange(
             @Param("from") LocalDate from,
             @Param("to") LocalDate to);
@@ -111,34 +115,36 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
      * including cancelled sessions. Includes PAID and UNPAID sessions,
      * excludes PACKAGE-covered sessions.
      */
-    @Query("""
-            SELECT cs FROM ClassSession cs
-            JOIN FETCH cs.student s
-            WHERE cs.deleted        = false
-              AND s.deleted         = false
-              AND cs.paymentStatus IN ('PAID', 'UNPAID')
-              AND cs.classDate     >= :from
-              AND cs.classDate     <= :to
-            ORDER BY cs.classDate, cs.startTime
-            """)
+    @Query(value = """
+            SELECT cs.*
+            FROM studio.class_sessions cs
+            JOIN studio.students s ON s.id = cs.student_id
+            WHERE cs.deleted = false
+              AND s.deleted = false
+              AND cs.payment_status IN ('PAID', 'UNPAID')
+              AND cs.class_date >= :from
+              AND cs.class_date <= :to
+            ORDER BY cs.class_date, cs.start_time
+            """, nativeQuery = true)
     List<ClassSession> findPotentialPerClassSessionsIncludingCancellationsByDateRange(
             @Param("from") LocalDate from,
             @Param("to") LocalDate to);
 
     /** True when student has at least one unpaid non-cancelled session that has already happened. */
-    @Query("""
-            SELECT CASE WHEN COUNT(cs) > 0 THEN true ELSE false END
-            FROM ClassSession cs
-            WHERE cs.deleted          = false
-              AND cs.student.id       = :studentId
-              AND cs.student.deleted  = false
-              AND cs.paymentStatus    = 'UNPAID'
-              AND cs.status          <> 'CANCELLED'
+    @Query(value = """
+            SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END
+            FROM studio.class_sessions cs
+            JOIN studio.students s ON s.id = cs.student_id
+            WHERE cs.deleted = false
+              AND s.deleted = false
+              AND cs.student_id = :studentId
+              AND cs.payment_status = 'UNPAID'
+              AND cs.status <> 'CANCELLED'
               AND (
-                    cs.classDate < :localDate
-                    OR (cs.classDate = :localDate AND cs.startTime <= :localTime)
+                    cs.class_date < :localDate
+                    OR (cs.class_date = :localDate AND cs.start_time <= :localTime)
                   )
-            """)
+            """, nativeQuery = true)
     boolean existsUnpaidOccurredSessionForStudent(
             @Param("studentId") Long studentId,
             @Param("localDate") LocalDate localDate,
